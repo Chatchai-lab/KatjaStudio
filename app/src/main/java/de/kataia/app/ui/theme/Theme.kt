@@ -1,6 +1,5 @@
 package de.kataia.app.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -12,32 +11,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = PrimaryDark,
+    secondary = SecondarySage,
+    tertiary = PrimaryWarm,
+    background = OnBackgroundDark, // Dunkler Hintergrund für Dark Mode
+    surface = OnBackgroundDark,
+    onPrimary = BackgroundWarm,
+    onBackground = BackgroundWarm,
+    onSurface = BackgroundWarm
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = PrimaryWarm,
+    secondary = SecondarySage,
+    background = BackgroundWarm,
+    surface = SurfaceWarm,
+    onPrimary = OnBackgroundDark,
+    onBackground = OnBackgroundDark,
+    onSurface = OnBackgroundDark
 )
 
 @Composable
 fun KataiaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
