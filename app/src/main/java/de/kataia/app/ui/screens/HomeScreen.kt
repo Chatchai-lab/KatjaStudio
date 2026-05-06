@@ -14,18 +14,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import de.kataia.app.data.FakeChallengeRepository
 import de.kataia.app.model.Challenge
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import de.kataia.app.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    xpCount: Int,
+    onChallengeClick: (String) -> Unit = {}
+) {
     val context = LocalContext.current
     val repository = remember { FakeChallengeRepository(context) }
 
-    // Status für die Filterung
+    val dailyChallenge = remember { repository.getDailyChallenge() }
+
     var selectedCategory by remember { mutableStateOf("Alle") }
     val categories = listOf("Alle", "SHAPES", "ANATOMY", "STILL_LIFE", "CREATIVE")
 
-    // Die Liste filtern, basierend auf der Auswahl
     val challenges = remember(selectedCategory) {
         if (selectedCategory == "Alle") {
             repository.getAllChallenges()
@@ -36,11 +42,56 @@ fun HomeScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Katjas Zeichen-Coach") })
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            modifier = Modifier.size(40.dp),
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Image(painter = painterResource(id = R.drawable.maskottchen), contentDescription = null)
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "kataia",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                },
+                actions = {
+                    Surface(
+                        modifier = Modifier.padding(end = 16.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "⭐ $xpCount XP",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+            )
         }
+
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
 
+            //Kleiner Willkommens-Text mit XP-Fortschritt
+            Text(
+                text = "Willkommen zurück du kleiner Popo!",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
             // 1. Filter-Zeile (Chips)
             LazyRow(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -62,8 +113,36 @@ fun HomeScreen() {
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(challenges) { challenge ->
-                    ChallengeItem(challenge)
+                if (dailyChallenge != null && selectedCategory == "Alle") {
+                    item {
+                        Text(
+                            text = "Deine heutige Aufgabe",
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        DailyChallengeItem(
+                            challenge = dailyChallenge,
+                            onClick = { onChallengeClick(dailyChallenge.id) }
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 16.dp),
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+
+                        Text(
+                            text = "Entdecke mehr",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+                }
+                items(challenges.filter { it.id != dailyChallenge?.id }) { challenge ->
+                    ChallengeItem(
+                        challenge = challenge,
+                        onClick = { onChallengeClick(challenge.id) }
+                    )
                 }
             }
         }
@@ -71,14 +150,17 @@ fun HomeScreen() {
 }
 
 @Composable
-fun ChallengeItem(challenge: Challenge) {
+fun ChallengeItem(
+    challenge: Challenge,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Titel & Schwierigkeit
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -94,16 +176,13 @@ fun ChallengeItem(challenge: Challenge) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Beschreibung
             Text(
                 text = challenge.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.typography.bodyMedium.color.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodyMedium,color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Footer: Kategorie & Dauer
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -150,5 +229,67 @@ fun DifficultyBadge(difficulty: String) {
             style = MaterialTheme.typography.labelSmall,
             color = color
         )
+    }
+}
+
+@Composable
+fun DailyChallengeItem(
+    challenge: Challenge,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = challenge.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                DifficultyBadge(challenge.difficulty.name)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = challenge.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "#${challenge.category}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "${challenge.estimatedMinutes} Min.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.DarkGray
+                )
+                Text(
+                    text = "${challenge.xpReward} XP",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
     }
 }

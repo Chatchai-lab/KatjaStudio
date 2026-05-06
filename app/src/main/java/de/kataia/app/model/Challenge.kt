@@ -1,28 +1,17 @@
 package de.kataia.app.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
 /**
- * Definiert die Schwierigkeitsgrade der Challenges
+ * Das zentrale Datenmodell für eine Zeichen-Übung.
+ * @Entity macht es zur Datenbank-Tabelle, @Serializable erlaubt das Laden aus JSON.
  */
 @Serializable
-enum class ChallengeDifficulty {
-    EASY, MEDIUM, HARD
-}
-
-/**
- * Definiert die Kategorien der Übungen
- */
-@Serializable
-enum class ChallengeCategory {
-    SHAPES, ANATOMY, STILL_LIFE, CREATIVE
-}
-
-/**
- * Das zentrale Datenmodell für eine Zeichen-Übung
- */
-@Serializable
+@Entity(tableName = "challenges")
 data class Challenge(
+    @PrimaryKey
     val id: String,
     val title: String,
     val description: String,
@@ -31,3 +20,13 @@ data class Challenge(
     val xpReward: Int,
     val estimatedMinutes: Int
 )
+
+@Serializable
+enum class ChallengeDifficulty {
+    EASY, MEDIUM, HARD
+}
+
+@Serializable
+enum class ChallengeCategory {
+    SHAPES, ANATOMY, STILL_LIFE, CREATIVE
+}
