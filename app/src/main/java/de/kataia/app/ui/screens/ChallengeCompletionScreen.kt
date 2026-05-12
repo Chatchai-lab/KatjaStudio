@@ -5,13 +5,11 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.kataia.app.ui.viewmodel.ChallengeCompletionViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,26 +18,33 @@ fun ChallengeCompletionScreen(
     viewModel: ChallengeCompletionViewModel,
     onNavigateBack: () -> Unit
 ) {
-    //Launcher um Fotos aus der Galerie zu wählen
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Launcher um Fotos aus der Galerie zu wählen
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri -> viewModel.onImageSelected(uri) }
     )
-    //Launcher für das Foto-Ergebnis
+
+    // Launcher für das Foto-Ergebnis (Kamera)
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview(),
         onResult = { bitmap ->
             viewModel.onImageCaptured(bitmap)
         }
     )
-    //Launcher für die Berechtigungs-Anfrage
+
+    // Launcher für die Berechtigungs-Anfrage
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
             if (isGranted) {
                 cameraLauncher.launch(null)
             }else{
-
+                android.widget.Toast.makeText(
+                        context,
+                        "Kamera-Berechtigung wird für Fotos benötigt",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
             }
         }
     )
@@ -62,7 +67,7 @@ fun ChallengeCompletionScreen(
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            // 1. Dauer Eingabefeld (verknüpft mit ViewModel)
+            // 1. Dauer Eingabefeld
             OutlinedTextField(
                 value = viewModel.duration,
                 onValueChange = { viewModel.duration = it },
@@ -72,24 +77,23 @@ fun ChallengeCompletionScreen(
                 enabled = !viewModel.isSaving
             )
 
-            // 2. Notiz Eingabefeld (verknüpft mit ViewModel)
+            // 2. Notiz Eingabefeld
             OutlinedTextField(
                 value = viewModel.note,
                 onValueChange = { viewModel.note = it },
                 label = { Text("Deine Gedanken (optional)") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp),
+                    .height(120.dp),
                 placeholder = { Text("Was hast du heute gelernt?") },
                 enabled = !viewModel.isSaving
             )
 
-            // 3. Foto-Sektion
+            // 3. Foto-Sektion (Buttons nebeneinander)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                //Galerie Button
                 Button(
                     onClick = {
                         photoPickerLauncher.launch(
@@ -104,7 +108,7 @@ fun ChallengeCompletionScreen(
                 ) {
                     Text(if (viewModel.selectedImageUri == null) "Galerie" else "Bild ändern")
                 }
-                //Kamera Button
+
                 Button(
                     onClick = {
                         permissionLauncher.launch(android.Manifest.permission.CAMERA)
@@ -118,35 +122,59 @@ fun ChallengeCompletionScreen(
                     Text(if (viewModel.capturedBitmap == null) "Kamera" else "Neues Foto")
                 }
             }
-            // Status-Anzeige
+
             if (viewModel.selectedImageUri != null || viewModel.capturedBitmap != null) {
-                Text("Bild ausgewählt ✓", color = MaterialTheme.colorScheme.primary)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Vorschau ausgewählt ✓",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        modifier = Modifier.size(160.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        androidx.compose.foundation.Image(
+                            painter = coil.compose.rememberAsyncImagePainter(
+                                model = viewModel.selectedImageUri ?: viewModel.capturedBitmap
+                            ),
+                            contentDescription = "Vorschau deiner Zeichnung",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // 4. Der Abschließen Button mit Validierung
+            // Validierung: Dauer darf nicht leer sein und muss eine Zahl sein
+            val isInputValid = viewModel.duration.isNotEmpty() && viewModel.duration.toIntOrNull() != null
 
-            //4. Der Abschließen Button mit Lade-Indikator
-            val context = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = {
-                    viewModel.saveCompletion(context, challengeId){
+                    viewModel.saveCompletion(context, challengeId) {
                         onNavigateBack()
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !viewModel.isSaving // Verhindert Doppelklicks
-            ){
+                enabled = !viewModel.isSaving && isInputValid // Aktiviert Button nur bei validem Input
+            ) {
                 if (viewModel.isSaving) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary,
                         strokeWidth = 2.dp
                     )
-                }else{
-                    Text("Erfolg speichern")
+                } else {
+                    Text("In Galerie verewigen (+50 XP)")
                 }
             }
         }

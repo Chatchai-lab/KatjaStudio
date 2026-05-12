@@ -65,4 +65,8 @@ class FakeChallengeRepository(private val context: Context) : ChallengeRepositor
         return emptyFlow()
     }
 
+    override fun getAllCompletions(): Flow<List<ChallengeCompletion>> {
+        return emptyFlow()
+    }
+
 }

@@ -1,14 +1,16 @@
 package de.kataia.app.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import de.kataia.app.data.FakeChallengeRepository
 import de.kataia.app.data.UserPreferencesRepository
+import de.kataia.app.data.ChallengeRepository
 import de.kataia.app.ui.screens.HomeScreen
 import de.kataia.app.ui.screens.GalleryScreen
 import de.kataia.app.ui.screens.ProgressScreen
@@ -17,10 +19,12 @@ import de.kataia.app.ui.screens.ChallengeCompletionScreen
 import de.kataia.app.ui.screens.ChallengeDetailScreen
 import de.kataia.app.ui.viewmodel.ChallengeCompletionViewModel
 
+
+
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,
-    repository: FakeChallengeRepository,
+    repository: ChallengeRepository,
     userPrefsRepository: UserPreferencesRepository
 ) {
     NavHost(
@@ -36,7 +40,7 @@ fun SetupNavGraph(
                 }
             )
 
-            val xpLevel by homeViewModel.userXp.androidx.compose.runtime.collectAsState()
+            val xpLevel by homeViewModel.userXp.collectAsState()
 
             HomeScreen(
                 xpCount = xpLevel,

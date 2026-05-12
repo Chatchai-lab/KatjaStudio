@@ -13,4 +13,6 @@ interface ChallengeRepository {
     fun getDailyChallenge(): Challenge?
     suspend fun saveChallengeCompletion(completion: ChallengeCompletion)
     fun getRecentCompletions(): Flow<List<ChallengeCompletion>>
-}
+
+    fun getAllCompletions(): Flow<List<ChallengeCompletion>>
+    }

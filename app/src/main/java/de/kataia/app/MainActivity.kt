@@ -9,13 +9,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import de.kataia.app.navigation.SetupNavGraph
 import de.kataia.app.ui.theme.KataiaTheme
+import de.kataia.app.data.ChallengeRepository
+import de.kataia.app.data.FakeChallengeRepository
+import de.kataia.app.data.RealChallengeRepository
+import de.kataia.app.data.UserPreferencesRepository
+import de.kataia.app.data.AppDatabase
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         //Repositories initialisieren
-        val challengeRepository = de.kataia.app.data.FakeChallengeRepository(this)
+        val database = AppDatabase.getDatabase(this)
+        val isTestMode = false
+        val challengeRepository: ChallengeRepository = if (isTestMode){
+            FakeChallengeRepository(this)
+        }else{
+            RealChallengeRepository(this, database.completionDao())
+        }
         val userPrefsRepository = de.kataia.app.data.UserPreferencesRepository(this)
 
         enableEdgeToEdge()
@@ -46,4 +58,5 @@ fun GreetingPreview() {
         Greeting("Android")
     }
 }
+
 

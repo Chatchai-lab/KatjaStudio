@@ -24,4 +24,7 @@ interface CompletionDao {
     // 4. Den allerletzten Abschluss holen (wichtig für die Streak-Berechnung)
     @Query("SELECT * FROM challenge_completions ORDER BY completedAt DESC LIMIT 1")
     suspend fun getLatestCompletion(): ChallengeCompletion?
+
+    @Query("SELECT * FROM challenge_completions ORDER BY completedAt DESC LIMIT 5")
+    fun getRecentCompletion(): Flow<List<ChallengeCompletion>>
 }
