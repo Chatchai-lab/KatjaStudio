@@ -25,3 +25,7 @@ out/
 .env
 .env.*
 !.env.example
+
+# Gradle / Android Studio
+.gradle/
+local.properties
